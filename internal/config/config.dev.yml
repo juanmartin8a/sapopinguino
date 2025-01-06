@@ -1,7 +1,0 @@
-appEnv: dev
-
-database:
-  DSN: SAPO_DB_DSN
-
-openai:
-  Key: SAPO_OpenAI_Key 
