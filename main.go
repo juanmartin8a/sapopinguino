@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"log"
 	awsutils "sapopinguino/internal/aws"
 	"sapopinguino/internal/config"
 	dbutils "sapopinguino/internal/db"
@@ -19,8 +22,9 @@ func init() {
     dbutils.ConfigDB()
 }
 
-func handleRequest() {
-
+func handleRequest(ctx context.Context, event json.RawMessage) error {
+    log.Println("handle called :D")
+    return nil
 }
 
 func main() {
