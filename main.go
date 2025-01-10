@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	awsutils "sapopinguino/internal/aws"
 	"sapopinguino/internal/config"
 	dbutils "sapopinguino/internal/db"
 	openaiutils "sapopinguino/internal/openai"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
@@ -22,11 +22,16 @@ func init() {
     dbutils.ConfigDB()
 }
 
-func handleRequest(ctx context.Context, event json.RawMessage) error {
+func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
     log.Println("handle called :D")
-    return nil
+	response := events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       "\"Hello from Lambda!\"",
+	}
+	return response, nil
 }
 
+
 func main() {
-    lambda.Start(handleRequest)
+    lambda.Start(handler)
 }
