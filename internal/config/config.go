@@ -81,14 +81,16 @@ func rootDir() string {
 
 func setDev() {
 	viper.AddConfigPath(
-		filepath.Join(rootDir(), "config"),
+		// filepath.Join(rootDir(), "config"),
+        "/config",
 	)
 	viper.SetConfigName("config.dev")
 }
 
 func setProd() {
 	viper.AddConfigPath(
-		filepath.Join(rootDir(), "config"),
+		// filepath.Join(rootDir(), "config"),
+        "/config",
 	)
 	viper.SetConfigName("config.prod")
 }

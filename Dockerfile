@@ -1,4 +1,4 @@
-FROM golang:1.23.4 as build
+FROM golang:1.23.4-alpine3.21 as build
 
 WORKDIR /sapopinguino
 
@@ -8,9 +8,15 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -tags lambda.norpc -o main main.go
+RUN go build -o main main.go
 
-FROM public.ecr.aws/lambda/provided:al2023
-COPY --from=build /sapopinguino/main ./main
-ENTRYPOINT [ "./main" ]
+FROM alpine:3.21
+
+COPY --from=build /sapopinguino/main /main
+
+COPY --from=build /sapopinguino/internal/config /config
+
+WORKDIR /
+
+ENTRYPOINT [ "/main" ]
 

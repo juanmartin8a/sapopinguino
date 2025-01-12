@@ -13,9 +13,9 @@ import (
 )
 
 func init() {
-	config.ReadConfig(config.ReadConfigOption{})
-
     awsutils.ConfigAWS()
+
+	config.ReadConfig(config.ReadConfigOption{})
 
 	openaiutils.ConfigOpenAI()
 
