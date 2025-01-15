@@ -15,7 +15,7 @@ func ConfigOpenAI() {
 }
 
 func ChatCompletion(context context.Context, model string, system_role string, input string) (*string, error) {
-    resp, err := OpenAIClient.CreateChatCompletion(
+    res, err := OpenAIClient.CreateChatCompletion(
 		context,
 		openai.ChatCompletionRequest{
 			Model: model,
@@ -36,5 +36,5 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         return nil, err 
     }
 
-    return &resp.Choices[0].Message.Content, nil
+    return &res.Choices[0].Message.Content, nil
 }
