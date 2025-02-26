@@ -35,7 +35,7 @@ func ChatCompletion(context context.Context, model string, system_role string, i
     isInTokensArray := false
     inQuotation := false 
     buildingToken := false
-    beingBuilt := ""
+    token := ""
 
     acc := openai.ChatCompletionAccumulator{}
 
@@ -57,16 +57,16 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         }
 
         if len(chunk.Choices) > 0 {
-            token := chunk.Choices[0].Delta.Content
-            println(token)
+            aiToken := chunk.Choices[0].Delta.Content
+            // println(aiToken)
 
             if !isInTokensArray {
-                if strings.Contains(chunk.Choices[0].Delta.Content, "[") {
+                if strings.Contains(aiToken, "[") {
                     isInTokensArray = true; 
-                    beingBuilt = "";
+                    // token = "";
                 }
             } else {
-                for _, r := range token {
+                for _, r := range aiToken {
                     if r == '"' {
                         inQuotation = !inQuotation;
                     }
@@ -75,13 +75,17 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                             buildingToken = true   
                         } else if r == '}' {
                             buildingToken = false
-                            beingBuilt += string(r);
+                            token += string(r);
+
+                            log.Println("Token: ")
+                            log.Println(token)
+                            token = "";
 
                             // unmarshal object
                         }
                     }
                     if buildingToken {
-                        beingBuilt += string(r);
+                        token += string(r);
                     }
                 }
             }
