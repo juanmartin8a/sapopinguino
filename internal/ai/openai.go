@@ -36,6 +36,7 @@ func ChatCompletion(context context.Context, model string, system_role string, i
     inQuotation := false 
     buildingToken := false
     token := ""
+    bbq := false // bbq stands for "backslash befoer quotation"
 
     acc := openai.ChatCompletionAccumulator{}
 
@@ -67,8 +68,15 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                 }
             } else {
                 for _, r := range aiToken {
-                    if r == '"' {
+                    if r == '"' && !bbq {
                         inQuotation = !inQuotation;
+                    }
+                    if r == '\\' {
+                        bbq = true; 
+                    } else {
+                        if (bbq == true) {
+                            bbq = false;
+                        }
                     }
                     if !inQuotation {
                         if r == '{' {
