@@ -2,14 +2,16 @@ package aiutils
 
 import (
 	"context"
+	"encoding/json"
 	// "encoding/json"
 	"log"
 	"sapopinguino/internal/config"
 
 	// openai "github.com/sashabaranov/go-openai"
+	"strings"
+
 	openai "github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
-    "strings"
 )
 
 var OpenAIClient *openai.Client
@@ -87,9 +89,24 @@ func ChatCompletion(context context.Context, model string, system_role string, i
 
                             log.Println("Token: ")
                             log.Println(token)
-                            token = "";
 
+                            tokenBytes := []byte(token)
+
+                            var tokenS Token
+
+                            err := json.Unmarshal(tokenBytes, &tokenS)
+                            if err != nil {
+                                log.Println("Error:", err)
+                                // return
+                            } else {
+                                log.Println("toro")
+                                log.Println(tokenS.Type)
+                            }
+
+                            token = "";
+                            
                             // unmarshal object
+
                         }
                     }
                     if buildingToken {
