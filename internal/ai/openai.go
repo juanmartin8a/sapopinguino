@@ -97,16 +97,12 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                             err := json.Unmarshal(tokenBytes, &tokenS)
                             if err != nil {
                                 log.Println("Error:", err)
-                                // return
                             } else {
                                 log.Println("toro")
                                 log.Println(tokenS.Type)
                             }
 
                             token = "";
-                            
-                            // unmarshal object
-
                         }
                     }
                     if buildingToken {
