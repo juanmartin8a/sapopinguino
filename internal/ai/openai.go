@@ -38,7 +38,7 @@ func ChatCompletion(context context.Context, model string, system_role string, i
     inQuotation := false 
     buildingToken := false
     token := ""
-    bbq := false // bbq stands for "backslash befoer quotation"
+    bbq := false // bbq stands for "backslash before quotation"
 
     acc := openai.ChatCompletionAccumulator{}
 
