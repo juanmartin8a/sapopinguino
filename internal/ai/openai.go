@@ -3,6 +3,8 @@ package aiutils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+
 	// "encoding/json"
 	"log"
 	"sapopinguino/internal/config"
@@ -104,9 +106,10 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                                 err := json.Unmarshal(tokenBytes, &tokenS)
                                 if err != nil {
                                     log.Println("Error:", err)
-                                } else {
-                                    log.Println("toro")
-                                    log.Println(tokenS.Type)
+                                    tokenStreamChannel <- TokenStreamRes{
+                                        Response: nil,
+                                        Error: fmt.Errorf("Error while unmarshalling token"),
+                                    }
                                 }
 
                                 tokenStreamChannel <- TokenStreamRes{
