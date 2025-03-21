@@ -8,7 +8,6 @@ type Token struct {
 	Value         string `json:"value,omitempty"`
 }
 
-// TokensResponse represents the complete JSON structure returned by GPT-4.
 type TokensResponse struct {
 	Tokens []Token `json:"tokens"`
 }

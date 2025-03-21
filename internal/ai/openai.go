@@ -16,110 +16,123 @@ import (
 
 var OpenAIClient *openai.Client
 
+type TokenStreamRes struct {
+	Response *Token 
+	Error  error
+}
+
 func ConfigOpenAI() {
     OpenAIClient = openai.NewClient(
         option.WithAPIKey(config.C.OpenAI.Key),
     )
 }
 
-func ChatCompletion(context context.Context, model string, system_role string, input string) (*string, error) {
-    stream := OpenAIClient.Chat.Completions.NewStreaming(
-		context,
-		openai.ChatCompletionNewParams{
-			Model: openai.F(openai.ChatModelGPT4oMini),
-			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-                openai.SystemMessage(system_role),
-				openai.UserMessage(input),
-			}),
-		},
-    )
+func ChatCompletion(context context.Context, model string, system_role string, input string) <-chan TokenStreamRes {
 
-    isInTokensArray := false
-    inQuotation := false 
-    buildingToken := false
-    token := ""
-    bbq := false // bbq stands for "backslash before quotation"
+    tokenStreamChannel := make(chan TokenStreamRes)
 
-    acc := openai.ChatCompletionAccumulator{}
+    go func() {
+        stream := OpenAIClient.Chat.Completions.NewStreaming(
+            context,
+            openai.ChatCompletionNewParams{
+                Model: openai.F(openai.ChatModelGPT4oMini),
+                Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+                    openai.SystemMessage(system_role),
+                    openai.UserMessage(input),
+                }),
+            },
+        )
 
-    for stream.Next() {
-        chunk := stream.Current()
-        acc.AddChunk(chunk)
+        isInTokensArray := false
+        inQuotation := false 
+        buildingToken := false
+        token := ""
+        bbq := false // bbq stands for "backslash before quotation"
 
-        if content, ok := acc.JustFinishedContent(); ok {
-            println("Content stream finished:", content)
-        }
+        // acc := openai.ChatCompletionAccumulator{}
 
-        // if using tool calls
-        if tool, ok := acc.JustFinishedToolCall(); ok {
-            println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-        }
+        for stream.Next() {
+            chunk := stream.Current()
+            // acc.AddChunk(chunk)
 
-        if refusal, ok := acc.JustFinishedRefusal(); ok {
-            println("Refusal stream finished:", refusal)
-        }
+            // if content, ok := acc.JustFinishedContent(); ok {
+            //     println("Content stream finished:", content)
+            // }
+            //
+            // // if using tool calls
+            // if tool, ok := acc.JustFinishedToolCall(); ok {
+            //     println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
+            // }
+            //
+            // if refusal, ok := acc.JustFinishedRefusal(); ok {
+            //     println("Refusal stream finished:", refusal)
+            // }
 
-        if len(chunk.Choices) > 0 {
-            aiToken := chunk.Choices[0].Delta.Content
-            // println(aiToken)
+            if len(chunk.Choices) > 0 {
+                aiToken := chunk.Choices[0].Delta.Content
 
-            if !isInTokensArray {
-                if strings.Contains(aiToken, "[") {
-                    isInTokensArray = true; 
-                    // token = "";
-                }
-            } else {
-                for _, r := range aiToken {
-                    if r == '"' && !bbq {
-                        inQuotation = !inQuotation;
+                if !isInTokensArray {
+                    if strings.Contains(aiToken, "[") {
+                        isInTokensArray = true; 
                     }
-                    if r == '\\' {
-                        bbq = true; 
-                    } else {
-                        if (bbq == true) {
-                            bbq = false;
+                } else {
+                    for _, r := range aiToken {
+                        if r == '"' && !bbq {
+                            inQuotation = !inQuotation;
                         }
-                    }
-                    if !inQuotation {
-                        if r == '{' {
-                            buildingToken = true   
-                        } else if r == '}' {
-                            buildingToken = false
-                            token += string(r);
-
-                            log.Println("Token: ")
-                            log.Println(token)
-
-                            tokenBytes := []byte(token)
-
-                            var tokenS Token
-
-                            err := json.Unmarshal(tokenBytes, &tokenS)
-                            if err != nil {
-                                log.Println("Error:", err)
-                            } else {
-                                log.Println("toro")
-                                log.Println(tokenS.Type)
+                        if r == '\\' {
+                            bbq = true; 
+                        } else {
+                            if (bbq == true) {
+                                bbq = false;
                             }
-
-                            token = "";
                         }
-                    }
-                    if buildingToken {
-                        token += string(r);
+                        if !inQuotation {
+                            if r == '{' {
+                                buildingToken = true   
+                            } else if r == '}' {
+                                buildingToken = false
+                                token += string(r);
+
+                                log.Println("Token: ")
+                                log.Println(token)
+
+                                tokenBytes := []byte(token)
+
+                                var tokenS Token
+
+                                err := json.Unmarshal(tokenBytes, &tokenS)
+                                if err != nil {
+                                    log.Println("Error:", err)
+                                } else {
+                                    log.Println("toro")
+                                    log.Println(tokenS.Type)
+                                }
+
+                                tokenStreamChannel <- TokenStreamRes{
+                                    Response: &tokenS,
+                                    Error: nil,
+                                }
+
+                                token = "";
+                            }
+                        }
+                        if buildingToken {
+                            token += string(r);
+                        }
                     }
                 }
             }
         }
-    }
 
-    if err := stream.Err(); err != nil {
-        panic(err)
-    }
+        if err := stream.Err(); err != nil {
+            panic(err)
+        }
+    }()
 
-    sapotoro := acc.Choices[0].Message.Content
-    log.Println(sapotoro)
+    // sapotoro := acc.Choices[0].Message.Content
+    // log.Println(sapotoro)
 
     // return &res.Choices[0].Message.Content, nil
-    return nil, nil
+    return tokenStreamChannel
 }
