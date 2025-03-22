@@ -37,7 +37,7 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         stream := OpenAIClient.Chat.Completions.NewStreaming(
             context,
             openai.ChatCompletionNewParams{
-                Model: openai.F(openai.ChatModelGPT4oMini),
+                Model: openai.F(model),
                 Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
                     openai.SystemMessage(system_role),
                     openai.UserMessage(input),
