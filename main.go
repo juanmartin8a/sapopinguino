@@ -45,6 +45,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
             })
             if err != nil {
                 log.Println("Error sending error token to client: %s", err)
+                awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
             }
 			break
 		}
@@ -65,6 +66,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		})
         if err != nil {
 		    log.Println("Error sending token to client: %s", err)
+            awsutils.HandleDeleteConnection(ctx, &connectionID, "sending token in PostConnection")
             break
         }
 	}
@@ -74,6 +76,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
     })
     if err != nil {
         log.Println("Error sending <end:)> thingy to client: %s", err)
+        awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<end:/>\" in PostConnection")
     }
 
 	response := events.APIGatewayProxyResponse{
