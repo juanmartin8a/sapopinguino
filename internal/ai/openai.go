@@ -24,9 +24,10 @@ type TokenStreamRes struct {
 }
 
 func ConfigOpenAI() {
-    OpenAIClient = openai.NewClient(
+    openaiClient := openai.NewClient(
         option.WithAPIKey(config.C.OpenAI.Key),
     )
+    OpenAIClient = &openaiClient
 }
 
 func ChatCompletion(context context.Context, model string, system_role string, input string) <-chan TokenStreamRes {
@@ -37,11 +38,11 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         stream := OpenAIClient.Chat.Completions.NewStreaming(
             context,
             openai.ChatCompletionNewParams{
-                Model: openai.F(model),
-                Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+                Model: model,
+                Messages: []openai.ChatCompletionMessageParamUnion{
                     openai.SystemMessage(system_role),
                     openai.UserMessage(input),
-                }),
+                },
             },
         )
 
