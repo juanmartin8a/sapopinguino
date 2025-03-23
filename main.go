@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    awsutils.ConfigAWS()
+    awsutils.ConfigAWS(&config.C.Websockets.Endpoint)
 
 	config.ReadConfig(config.ReadConfigOption{})
 
