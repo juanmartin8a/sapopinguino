@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
-	"github.com/sashabaranov/go-openai"
+	"github.com/openai/openai-go"
 )
 
 func init() {
@@ -30,11 +30,15 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
     tokens := []*aiutils.Token{}
 
-    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.GPT4o, aiutils.SystemRoleContent, `{
-        "input_language": "English",
-        "target_language": "Spanish",
-        "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
-    }`)
+    log.Println(event.Body)
+    log.Println(event.RequestContext.Stage)
+
+    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, event.Body)
+    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.GPT4o, aiutils.SystemRoleContent, `{
+    //     "input_language": "English",
+    //     "target_language": "Spanish",
+    //     "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
+    // }`)
 
     for res := range tokenStreamChannel {
 		if res.Error != nil {
