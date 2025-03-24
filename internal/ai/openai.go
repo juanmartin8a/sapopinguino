@@ -110,8 +110,10 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         }
 
         if err := stream.Err(); err != nil {
-            log.Println("sapo")
-            panic(err)
+            tokenStreamChannel <- TokenStreamRes{
+                Response: nil,
+                Error: fmt.Errorf("Error while or during LLM's response strean : %v", err),
+            }
         }
 
         close(tokenStreamChannel)
