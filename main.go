@@ -55,7 +55,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
                 Data:         []byte("<error:/>"),
             })
             if err != nil {
-                log.Println("Error sending error token to client: %v", err)
+                log.Printf("Error sending error token to client: %v", err)
                 awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
             }
 			break
@@ -65,13 +65,13 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
         jsonData, err := json.Marshal(res.Response)
 	    if err != nil {
-		    log.Println("Error marshaling JSON:", err)
+		    log.Printf("Error marshaling JSON: %v", err)
             _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
                 ConnectionId: &connectionID,
                 Data:         []byte("<error:/>"),
             })
             if err != nil {
-                log.Println("Error sending error token to client: %s", err)
+                log.Println("Error sending error token to client: %v", err)
                 awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
             }
             break
@@ -82,7 +82,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 			Data:         jsonData,
 		})
         if err != nil {
-		    log.Println("Error sending token to client: %s", err)
+		    log.Println("Error sending token to client: %v", err)
             awsutils.HandleDeleteConnection(ctx, &connectionID, "sending token in PostConnection")
             break
         }
@@ -94,7 +94,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
             Data:         []byte("<end:)>"),
         })
         if err != nil {
-            log.Println("Error sending <end:)> thingy to client: %s", err)
+            log.Println("Error sending <end:)> thingy to client: %v", err)
             awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<end:/>\" in PostConnection")
         }
     }

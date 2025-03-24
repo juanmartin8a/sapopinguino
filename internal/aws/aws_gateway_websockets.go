@@ -17,6 +17,6 @@ func HandleDeleteConnection(ctx context.Context, connectionID *string, afterErro
         ConnectionId: connectionID,
     })
     if err != nil {
-        log.Println("Error while deleting connection after %s failed: %s", afterErrorMessage, err)
+        log.Printf("Error while deleting connection after %s failed: %s", afterErrorMessage, err)
     }
 }

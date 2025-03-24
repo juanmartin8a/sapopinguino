@@ -93,7 +93,7 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                         if !inQuotation {
                             if r == '{' {
                                 buildingToken = true   
-                            } else if r == '}' {
+                            } else if r == '}' && buildingToken == true {
                                 buildingToken = false
                                 token += string(r);
 
