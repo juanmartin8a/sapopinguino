@@ -81,9 +81,6 @@ func ChatCompletion(context context.Context, model string, system_role string, i
                                 buildingToken = false
                                 token += string(r);
 
-                                log.Println("Token: ")
-                                log.Println(token)
-
                                 tokenBytes := []byte(token)
 
                                 var tokenS Token
