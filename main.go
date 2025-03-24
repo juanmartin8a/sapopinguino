@@ -22,8 +22,6 @@ func init() {
 
     awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
 
-    log.Printf("ws endpoint: %s", config.C.Websocket.Endpoint)
-
 	aiutils.ConfigOpenAI()
 
     dbutils.ConfigDB()
@@ -34,21 +32,32 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
     tokens := []*aiutils.Token{}
 
-    log.Println(event.Body)
-    log.Println(event.RequestContext.Stage)
+    bodyBytes := []byte(event.Body)
 
-    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, event.Body)
-    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, `{
-        "input_language": "English",
-        "target_language": "Spanish",
-        "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
-    }`)
+    var bodyS awsutils.Body
+
+    err := json.Unmarshal(bodyBytes, &bodyS)
+    if err != nil {
+        log.Printf("Failed to unmarshal request's body: %v", err)
+        return events.APIGatewayProxyResponse{
+            StatusCode: 500,
+            Body:       `"Internal server error :/"`,
+        }, err
+    }
+
+    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, bodyS.Message)
+    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, `{
+    //     "input_language": "English",
+    //     "target_language": "Spanish",
+    //     "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
+    // }`)
+
+    // var err error
 
     for res := range tokenStreamChannel {
-        log.Println("hi")
 		if res.Error != nil {
 			log.Printf("\nError encountered: %v\n", res.Error)
-            _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
+            _, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
                 ConnectionId: &connectionID,
                 Data:         []byte("<error:/>"),
             })
@@ -59,13 +68,19 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 			break
 		}
 
-        log.Println(res.Response.Type)
-
         tokens = append(tokens, res.Response)
 
         jsonData, err := json.Marshal(res.Response)
 	    if err != nil {
 		    log.Println("Error marshaling JSON:", err)
+            _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
+                ConnectionId: &connectionID,
+                Data:         []byte("<error:/>"),
+            })
+            if err != nil {
+                log.Println("Error sending error token to client: %s", err)
+                awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
+            }
             break
 	    }
 
@@ -79,18 +94,21 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
             break
         }
 	}
-    _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
-        ConnectionId: &connectionID,
-        Data:         []byte("<end:)>"),
-    })
+
     if err != nil {
-        log.Println("Error sending <end:)> thingy to client: %s", err)
-        awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<end:/>\" in PostConnection")
+        _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
+            ConnectionId: &connectionID,
+            Data:         []byte("<end:)>"),
+        })
+        if err != nil {
+            log.Println("Error sending <end:)> thingy to client: %s", err)
+            awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<end:/>\" in PostConnection")
+        }
     }
 
 	response := events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       "\"Hello from Lambda!\"",
+		Body:       "\"SIIUUUUU!\"",
 	}
 
 	return response, nil
