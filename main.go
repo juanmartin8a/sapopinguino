@@ -88,7 +88,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
         }
 	}
 
-    if err != nil {
+    if err == nil {
         _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
             ConnectionId: &connectionID,
             Data:         []byte("<end:)>"),
