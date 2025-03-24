@@ -106,10 +106,9 @@ func ChatCompletion(context context.Context, model string, system_role string, i
 
                                 err := json.Unmarshal(tokenBytes, &tokenS)
                                 if err != nil {
-                                    log.Println("Error:", err)
                                     tokenStreamChannel <- TokenStreamRes{
                                         Response: nil,
-                                        Error: fmt.Errorf("Error while unmarshalling token"),
+                                        Error: fmt.Errorf("Error while unmarshalling token: %v", err),
                                     }
                                 }
 
