@@ -15,7 +15,7 @@ import (
 
 type config struct {
 	AppEnv   string
-	Websockets struct {
+	Websocket struct {
 		Endpoint string
 	}
 	Database struct {

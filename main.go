@@ -16,6 +16,7 @@ import (
 )
 
 func init() {
+    log.Printf("ws endpoint: %s", config.C.Websockets.Endpoint)
     awsutils.ConfigAWS(&config.C.Websockets.Endpoint)
 
 	config.ReadConfig(config.ReadConfigOption{})
@@ -33,14 +34,15 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
     log.Println(event.Body)
     log.Println(event.RequestContext.Stage)
 
-    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, event.Body)
-    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.GPT4o, aiutils.SystemRoleContent, `{
-    //     "input_language": "English",
-    //     "target_language": "Spanish",
-    //     "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
-    // }`)
+    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, event.Body)
+    tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, `{
+        "input_language": "English",
+        "target_language": "Spanish",
+        "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
+    }`)
 
     for res := range tokenStreamChannel {
+        log.Println("hi")
 		if res.Error != nil {
 			log.Printf("\nError encountered: %v\n", res.Error)
             _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
