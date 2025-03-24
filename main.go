@@ -46,23 +46,16 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
     }
 
     tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, bodyS.Message)
-    // tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, `{
-    //     "input_language": "English",
-    //     "target_language": "Spanish",
-    //     "input": "abc, easy as do re mi, or as simple as 123, abc 123 baby you and me girl"
-    // }`)
-
-    // var err error
 
     for res := range tokenStreamChannel {
 		if res.Error != nil {
-			log.Printf("\nError encountered: %v\n", res.Error)
+			log.Printf("Error while streaming LLM's response: %v", res.Error)
             _, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
                 ConnectionId: &connectionID,
                 Data:         []byte("<error:/>"),
             })
             if err != nil {
-                log.Println("Error sending error token to client: %s", err)
+                log.Println("Error sending error token to client: %v", err)
                 awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
             }
 			break
@@ -108,7 +101,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
 	response := events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       "\"SIIUUUUU!\"",
+        Body:       `"SIIUUUUU! :D"`,
 	}
 
 	return response, nil
