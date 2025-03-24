@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-    log.Printf("ws endpoint: %s", config.C.Websockets.Endpoint)
-    awsutils.ConfigAWS(&config.C.Websockets.Endpoint)
+    log.Printf("ws endpoint: %s", config.C.Websocket.Endpoint)
+    awsutils.ConfigAWS(&config.C.Websocket.Endpoint)
 
 	config.ReadConfig(config.ReadConfigOption{})
 
