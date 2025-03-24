@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	// "encoding/json"
-	"log"
 	"sapopinguino/internal/config"
 
-	// openai "github.com/sashabaranov/go-openai"
 	"strings"
 
 	openai "github.com/openai/openai-go"
