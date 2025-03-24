@@ -52,24 +52,8 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         token := ""
         bbq := false // bbq stands for "backslash before quotation"
 
-        // acc := openai.ChatCompletionAccumulator{}
-
         for stream.Next() {
             chunk := stream.Current()
-            // acc.AddChunk(chunk)
-
-            // if content, ok := acc.JustFinishedContent(); ok {
-            //     println("Content stream finished:", content)
-            // }
-            //
-            // // if using tool calls
-            // if tool, ok := acc.JustFinishedToolCall(); ok {
-            //     println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-            // }
-            //
-            // if refusal, ok := acc.JustFinishedRefusal(); ok {
-            //     println("Refusal stream finished:", refusal)
-            // }
 
             if len(chunk.Choices) > 0 {
                 aiToken := chunk.Choices[0].Delta.Content
@@ -129,13 +113,12 @@ func ChatCompletion(context context.Context, model string, system_role string, i
         }
 
         if err := stream.Err(); err != nil {
+            log.Println("sapo")
             panic(err)
         }
+
+        close(tokenStreamChannel)
     }()
 
-    // sapotoro := acc.Choices[0].Message.Content
-    // log.Println(sapotoro)
-
-    // return &res.Choices[0].Message.Content, nil
     return tokenStreamChannel
 }
