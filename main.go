@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	aiutils "sapopinguino/internal/ai"
 	awsutils "sapopinguino/internal/aws"
@@ -38,11 +39,12 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
     err := json.Unmarshal(bodyBytes, &bodyS)
     if err != nil {
-        log.Printf("Failed to unmarshal request's body: %v", err)
+        error := fmt.Errorf("Failed to unmarshal request's body: %v", err)
+        log.Println(error)
         return events.APIGatewayProxyResponse{
             StatusCode: 500,
             Body:       `"Internal server error :/"`,
-        }, err
+        }, error
     }
 
     tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4o, aiutils.SystemRoleContent, bodyS.Message)
@@ -89,7 +91,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 	}
 
     if err == nil {
-        _, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
+        _, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
             ConnectionId: &connectionID,
             Data:         []byte("<end:)>"),
         })
