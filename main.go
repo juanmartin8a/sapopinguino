@@ -16,11 +16,13 @@ import (
 )
 
 func init() {
+    awsutils.ConfigAWS()
+
     config.ReadConfig(config.ReadConfigOption{})
 
-    log.Printf("ws endpoint: %s", config.C.Websocket.Endpoint)
+    awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
 
-    awsutils.ConfigAWS(&config.C.Websocket.Endpoint)
+    log.Printf("ws endpoint: %s", config.C.Websocket.Endpoint)
 
 	aiutils.ConfigOpenAI()
 

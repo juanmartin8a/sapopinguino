@@ -16,7 +16,7 @@ var (
 	APIGatewayClient *apigatewaymanagementapi.Client
 )
 
-func ConfigAWS(websocketsEndpoint *string) {
+func ConfigAWS() {
     cfg, err := awsConfig.LoadDefaultConfig(
         context.TODO(),
     )
@@ -26,7 +26,16 @@ func ConfigAWS(websocketsEndpoint *string) {
 
     SSMClient = ssm.NewFromConfig(cfg)
     KMSClient = kms.NewFromConfig(cfg)
-    // APIGatewayClient = apigatewaymanagementapi.NewAPIGatewayManagementClient(&cfg, "", "")
+}
+
+func ConfigAWSGateway(websocketsEndpoint *string) {
+    cfg, err := awsConfig.LoadDefaultConfig(
+        context.TODO(),
+    )
+	if err != nil {
+        log.Fatalf("Error while loading the AWS config: %s", err)
+	}    
+
     APIGatewayClient = apigatewaymanagementapi.NewFromConfig(cfg, func(o *apigatewaymanagementapi.Options) {
 		o.BaseEndpoint = websocketsEndpoint
     })
