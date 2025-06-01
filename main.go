@@ -47,7 +47,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		}, error
 	}
 
-	tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4_1, aiutils.SystemRoleContent, bodyS.Message)
+	tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4_1, aiutils.DeveloperPrompt, bodyS.Message)
 
 	for res := range tokenStreamChannel {
 		if res.Error != nil {
