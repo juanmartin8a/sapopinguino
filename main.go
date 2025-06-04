@@ -9,6 +9,7 @@ import (
 	awsutils "sapopinguino/internal/aws"
 	"sapopinguino/internal/config"
 	dbutils "sapopinguino/internal/db"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -84,9 +85,14 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 			Data:         jsonData,
 		})
 		if err != nil {
-			log.Printf("Error sending token to client: %v", err)
-			awsutils.HandleDeleteConnection(ctx, &connectionID, "sending token in PostConnection")
-			break
+			if strings.Contains(err.Error(), "410") {
+				log.Printf("Client disconnected (user stopped stream): %v", err)
+				break
+			} else {
+				log.Printf("Error sending token to client: %v", err)
+				awsutils.HandleDeleteConnection(ctx, &connectionID, "sending token in PostConnection")
+				break
+			}
 		}
 	}
 
