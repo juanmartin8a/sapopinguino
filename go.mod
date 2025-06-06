@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
-	github.com/openai/openai-go v1.2.0
+	github.com/openai/openai-go v1.3.0
 	github.com/spf13/viper v1.20.1
 )
 

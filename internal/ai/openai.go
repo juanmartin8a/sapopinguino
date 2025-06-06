@@ -112,7 +112,7 @@ func ChatCompletion(context context.Context, model string, developer_prompt stri
 		if err := stream.Err(); err != nil {
 			tokenStreamChannel <- TokenStreamRes{
 				Response: nil,
-				Error:    fmt.Errorf("Error while or during LLM's response strean : %v", err),
+				Error:    fmt.Errorf("Error while or during LLM's response stream : %v", err),
 			}
 		}
 
