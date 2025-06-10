@@ -66,7 +66,8 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 
 		tokens = append(tokens, res.Response)
 
-		jsonData, err := json.Marshal(res.Response)
+		var jsonData []byte
+		jsonData, err = json.Marshal(res.Response)
 		if err != nil {
 			log.Printf("Error marshaling JSON: %v", err)
 			_, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
@@ -86,7 +87,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		})
 		if err != nil {
 			if strings.Contains(err.Error(), "410") {
-				log.Printf("Client disconnected (user stopped stream): %v", err)
+				log.Printf("Client disconnected: %v", err)
 				break
 			} else {
 				log.Printf("Error sending token to client: %v", err)
