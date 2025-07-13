@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	aiutils "sapopinguino/internal/ai"
 	awsutils "sapopinguino/internal/aws"
@@ -29,8 +30,7 @@ func init() {
 	dbutils.ConfigDB()
 }
 
-func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-	connectionID := event.RequestContext.ConnectionID
+func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*events.LambdaFunctionURLStreamingResponse, error) {
 
 	tokens := []*aiutils.Token{}
 
@@ -42,80 +42,78 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 	if err != nil {
 		error := fmt.Errorf("Failed to unmarshal request's body: %v", err)
 		log.Println(error)
-		return events.APIGatewayProxyResponse{
+		return &events.LambdaFunctionURLStreamingResponse{
 			StatusCode: 500,
-			Body:       `"Internal server error :/"`,
+			Headers: map[string]string{
+				"Content-Type": "text/plain",
+			},
+			Body: strings.NewReader("Internal server error :/"),
 		}, error
 	}
 
-	tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4_1, aiutils.DeveloperPrompt, bodyS.Message)
+	reader, writer := io.Pipe()
 
-	for res := range tokenStreamChannel {
-		if res.Error != nil {
-			log.Printf("Error while streaming LLM's response: %v", res.Error)
-			_, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
-				ConnectionId: &connectionID,
-				Data:         []byte("<error:/>"),
-			})
+	go func() {
+		defer writer.Close()
+		tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4_1, aiutils.DeveloperPrompt, bodyS.Message)
+
+		for res := range tokenStreamChannel {
+
+			if res.Error != nil {
+				log.Printf("Error while streaming LLM's response: %v", res.Error)
+
+				_, err := writer.Write([]byte("event: error\ndata: {}\n\n"))
+				if err != nil {
+					log.Printf("Error sending error token to client: %v", err)
+				}
+
+				return
+			}
+
+			tokens = append(tokens, res.Response)
+
+			var jsonData []byte
+			jsonData, err = json.Marshal(res.Response)
+			if err != nil {
+				log.Printf("Error marshaling JSON: %v", err)
+
+				_, err := writer.Write([]byte("event: error\ndata: {}\n\n"))
+				if err != nil {
+					log.Printf("Error sending error token to client: %v", err)
+				}
+
+				return
+			}
+
+			data := fmt.Sprintf("event: token\ndata: &s\n\n", jsonData)
+			_, err = writer.Write([]byte(data))
 			if err != nil {
 				log.Printf("Error sending error token to client: %v", err)
-				awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
+				return
 			}
-			break
 		}
 
-		tokens = append(tokens, res.Response)
-
-		var jsonData []byte
-		jsonData, err = json.Marshal(res.Response)
-		if err != nil {
-			log.Printf("Error marshaling JSON: %v", err)
-			_, err := awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
-				ConnectionId: &connectionID,
-				Data:         []byte("<error:/>"),
-			})
+		if err == nil {
+			_, err = writer.Write([]byte("event: end\ndata: {}\n\n"))
 			if err != nil {
 				log.Printf("Error sending error token to client: %v", err)
-				awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<error:/>\" in PostConnection")
 			}
-			break
+			return
 		}
-
-		_, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
-			ConnectionId: &connectionID,
-			Data:         jsonData,
-		})
-		if err != nil {
-			if strings.Contains(err.Error(), "410") {
-				log.Printf("Client disconnected: %v", err)
-				break
-			} else {
-				log.Printf("Error sending token to client: %v", err)
-				awsutils.HandleDeleteConnection(ctx, &connectionID, "sending token in PostConnection")
-				break
-			}
-		}
-	}
-
-	if err == nil {
-		_, err = awsutils.APIGatewayClient.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
-			ConnectionId: &connectionID,
-			Data:         []byte("<end:)>"),
-		})
-		if err != nil {
-			log.Printf("Error sending <end:)> thingy to client: %v", err)
-			awsutils.HandleDeleteConnection(ctx, &connectionID, "sending \"<end:/>\" in PostConnection")
-		}
-	}
+	}()
 
 	// Add data to DB
 
-	response := events.APIGatewayProxyResponse{
+	response := events.LambdaFunctionURLStreamingResponse{
 		StatusCode: 200,
-		Body:       `"SIIUUUUU! :D"`,
+		Headers: map[string]string{
+			"Content-Type":  "text/event-stream",
+			"Cache-Control": "no-cache, no-store, must-revalidate",
+		},
+		Body: reader,
 	}
 
-	return response, nil
+	return &response, nil
 }
 
 func main() {
