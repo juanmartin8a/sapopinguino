@@ -9,7 +9,6 @@ import (
 	aiutils "sapopinguino/internal/ai"
 	awsutils "sapopinguino/internal/aws"
 	"sapopinguino/internal/config"
-	dbutils "sapopinguino/internal/db"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -22,16 +21,12 @@ func init() {
 
 	config.ReadConfig(config.ReadConfigOption{})
 
-	awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
-
 	aiutils.ConfigOpenAI()
-
-	dbutils.ConfigDB()
 }
 
 func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*events.LambdaFunctionURLStreamingResponse, error) {
 
-	tokens := []*aiutils.Token{}
+	// tokens := []*aiutils.Token{}
 
 	bodyBytes := []byte(event.Body)
 
@@ -69,7 +64,7 @@ func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*event
 				return
 			}
 
-			tokens = append(tokens, res.Response)
+			// tokens = append(tokens, res.Response)
 
 			var jsonData []byte
 			jsonData, err = json.Marshal(res.Response)
@@ -84,7 +79,7 @@ func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*event
 				return
 			}
 
-			data := fmt.Sprintf("event: token\ndata: &s\n\n", jsonData)
+			data := fmt.Sprintf("event: token\ndata: %s\n\n", jsonData)
 			_, err = writer.Write([]byte(data))
 			if err != nil {
 				log.Printf("Error sending error token to client: %v", err)
@@ -106,8 +101,12 @@ func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*event
 	response := events.LambdaFunctionURLStreamingResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
-			"Content-Type":  "text/event-stream",
-			"Cache-Control": "no-cache, no-store, must-revalidate",
+			"Content-Type":                 "text/event-stream",
+			"Cache-Control":                "no-cache, no-store, must-revalidate",
+			"Connection":                   "keep-alive",
+			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Headers": "Cache-Control",
+			"X-Content-Type-Options":       "nosniff",
 		},
 		Body: reader,
 	}

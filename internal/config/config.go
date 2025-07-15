@@ -14,16 +14,10 @@ import (
 )
 
 type config struct {
-	AppEnv   string
-	Websocket struct {
-		Endpoint string
+	AppEnv string
+	OpenAI struct {
+		Key string
 	}
-	Database struct {
-		DSN string
-	}
-    OpenAI struct {
-        Key string
-    }
 }
 
 var C config
@@ -59,7 +53,7 @@ func ReadConfig(option ReadConfigOption) {
 		log.Fatalln(err)
 	}
 
-    err := setCValues(&C.Database.DSN, &C.OpenAI.Key)
+	err := setCValues(&C.OpenAI.Key)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +79,7 @@ func rootDir() string {
 func setDev() {
 	viper.AddConfigPath(
 		// filepath.Join(rootDir(), "config"),
-        "/config",
+		"/config",
 	)
 	viper.SetConfigName("config.dev")
 }
@@ -93,7 +87,7 @@ func setDev() {
 func setProd() {
 	viper.AddConfigPath(
 		// filepath.Join(rootDir(), "config"),
-        "/config",
+		"/config",
 	)
 	viper.SetConfigName("config.prod")
 }

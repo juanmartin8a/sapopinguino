@@ -5,7 +5,6 @@ go 1.24.3
 require (
 	github.com/aws/aws-lambda-go v1.48.0
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
-	github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.0
 	github.com/jmoiron/sqlx v1.4.0
