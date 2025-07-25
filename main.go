@@ -101,12 +101,8 @@ func handler(ctx context.Context, event events.LambdaFunctionURLRequest) (*event
 	response := events.LambdaFunctionURLStreamingResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
-			"Content-Type":                 "text/event-stream",
-			"Cache-Control":                "no-cache, no-store, must-revalidate",
-			"Connection":                   "keep-alive",
-			"Access-Control-Allow-Origin":  "*",
-			"Access-Control-Allow-Headers": "Cache-Control",
-			"X-Content-Type-Options":       "nosniff",
+			"Content-Type":  "text/event-stream",
+			"Cache-Control": "no-cache, no-store, must-revalidate",
 		},
 		Body: reader,
 	}
