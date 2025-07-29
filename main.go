@@ -8,7 +8,6 @@ import (
 	aiutils "sapopinguino/internal/ai"
 	awsutils "sapopinguino/internal/aws"
 	"sapopinguino/internal/config"
-	dbutils "sapopinguino/internal/db"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -25,14 +24,12 @@ func init() {
 	awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
 
 	aiutils.ConfigOpenAI()
-
-	dbutils.ConfigDB()
 }
 
 func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	connectionID := event.RequestContext.ConnectionID
 
-	tokens := []*aiutils.Token{}
+	// tokens := []*aiutils.Token{}
 
 	bodyBytes := []byte(event.Body)
 
@@ -64,7 +61,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 			break
 		}
 
-		tokens = append(tokens, res.Response)
+		// tokens = append(tokens, res.Response)
 
 		var jsonData []byte
 		jsonData, err = json.Marshal(res.Response)
