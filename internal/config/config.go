@@ -1,6 +1,6 @@
 package config
 
-// READS THE FILES FROM ./config
+// READS THE .yml FILES FROM ./config
 
 import (
 	"log"
@@ -8,22 +8,19 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	awsutils "sapopinguino/internal/aws"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
 type config struct {
-	AppEnv   string
+	AppEnv    string
 	Websocket struct {
 		Endpoint string
 	}
-	Database struct {
-		DSN string
+	OpenAI struct {
+		Key string
 	}
-    OpenAI struct {
-        Key string
-    }
 }
 
 var C config
@@ -38,8 +35,6 @@ type ReadConfigOption struct {
 }
 
 func ReadConfig(option ReadConfigOption) {
-	config := &C
-
 	e := appEnv(option)
 
 	if e == Production {
@@ -51,18 +46,20 @@ func ReadConfig(option ReadConfigOption) {
 	viper.SetConfigType("yml")
 	viper.AutomaticEnv()
 
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := viper.Unmarshal(&config); err != nil {
+	if err := viper.Unmarshal(&C); err != nil {
 		log.Fatalln(err)
 	}
 
-    err := setCValues(&C.Database.DSN, &C.OpenAI.Key)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err := setCValues(&C.OpenAI.Key)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 func appEnv(option ReadConfigOption) string {
@@ -85,7 +82,7 @@ func rootDir() string {
 func setDev() {
 	viper.AddConfigPath(
 		// filepath.Join(rootDir(), "config"),
-        "/config",
+		"/config",
 	)
 	viper.SetConfigName("config.dev")
 }
@@ -93,29 +90,29 @@ func setDev() {
 func setProd() {
 	viper.AddConfigPath(
 		// filepath.Join(rootDir(), "config"),
-        "/config",
+		"/config",
 	)
 	viper.SetConfigName("config.prod")
 }
 
-func setCValues(params ...*string) error {
-	for _, paramName := range params {
-		paramBytes, err := awsutils.GetSecretString(
-			*paramName,
-		)
-		if err != nil {
-			log.Printf(
-				"Error while getting param %s: %s",
-				*paramName,
-				err,
-			)
-			return err
-		}
-
-		param := string(paramBytes)
-
-		*paramName = param
-	}
-
-	return nil
-}
+// func setCValues(params ...*string) error {
+// 	for _, paramName := range params {
+// 		paramBytes, err := awsutils.GetSecretString(
+// 			*paramName,
+// 		)
+// 		if err != nil {
+// 			log.Printf(
+// 				"Error while getting param %s: %s",
+// 				*paramName,
+// 				err,
+// 			)
+// 			return err
+// 		}
+//
+// 		param := string(paramBytes)
+//
+// 		*paramName = param
+// 	}
+//
+// 	return nil
+// }

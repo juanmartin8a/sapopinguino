@@ -8,15 +8,15 @@ import (
 )
 
 type Body struct {
-    Action string `json:"action"`
-    Message string`json:"message"`
+	Action  string `json:"action"`
+	Message string `json:"message"`
 }
 
 func HandleDeleteConnection(ctx context.Context, connectionID *string, afterErrorMessage string) {
-    _, err := APIGatewayClient.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
-        ConnectionId: connectionID,
-    })
-    if err != nil {
-        log.Printf("Error while deleting connection after %s failed: %s", afterErrorMessage, err)
-    }
+	_, err := APIGatewayClient.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
+		ConnectionId: connectionID,
+	})
+	if err != nil {
+		log.Printf("Error while deleting connection after %s failed: %s", afterErrorMessage, err)
+	}
 }
