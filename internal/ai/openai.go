@@ -9,8 +9,9 @@ import (
 
 	"strings"
 
-	openai "github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
+	openai "github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/responses"
 )
 
 var OpenAIClient *openai.Client
@@ -35,13 +36,16 @@ func ChatCompletion(context context.Context, model string, developer_prompt stri
 	tokenStreamChannel := make(chan TokenStreamRes)
 
 	go func() {
-		stream := OpenAIClient.Chat.Completions.NewStreaming(
+		stream := OpenAIClient.Responses.NewStreaming(
 			context,
-			openai.ChatCompletionNewParams{
-				Model: model,
-				Messages: []openai.ChatCompletionMessageParamUnion{
-					openai.DeveloperMessage(developer_prompt),
-					openai.UserMessage(input),
+			responses.ResponseNewParams{
+				Model:        model,
+				Instructions: openai.String(developer_prompt),
+				Input: responses.ResponseNewParamsInputUnion{
+					OfString: openai.String(input),
+				},
+				Reasoning: openai.ReasoningParam{
+					Effort: openai.ReasoningEffortMinimal,
 				},
 			},
 		)
@@ -53,10 +57,9 @@ func ChatCompletion(context context.Context, model string, developer_prompt stri
 		bbq := false // bbq stands for "backslash before quotation"
 
 		for stream.Next() {
-			chunk := stream.Current()
-
-			if len(chunk.Choices) > 0 {
-				aiToken := chunk.Choices[0].Delta.Content
+			data := stream.Current()
+			if data.JSON.Text.Valid() {
+				aiToken := data.Text
 
 				if !isInTokensArray {
 					if strings.Contains(aiToken, "[") {
