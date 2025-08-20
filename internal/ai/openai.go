@@ -47,6 +47,11 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 				Reasoning: openai.ReasoningParam{
 					Effort: openai.ReasoningEffortMinimal,
 				},
+				// Text: responses.ResponseTextConfigParam{
+				// 	Format: responses.ResponseFormatTextConfigUnionParam{
+				// 		OfJSONSchema: open,
+				// 	},
+				// },
 			},
 		)
 
