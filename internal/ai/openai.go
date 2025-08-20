@@ -9,8 +9,9 @@ import (
 
 	"strings"
 
-	openai "github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
+	openai "github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/responses"
 )
 
 var OpenAIClient *openai.Client
@@ -30,19 +31,27 @@ func ConfigOpenAI() {
 	OpenAIClient = &openaiClient
 }
 
-func ChatCompletion(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
+func StreamResponse(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
 
 	tokenStreamChannel := make(chan TokenStreamRes)
 
 	go func() {
-		stream := OpenAIClient.Chat.Completions.NewStreaming(
+		stream := OpenAIClient.Responses.NewStreaming(
 			context,
-			openai.ChatCompletionNewParams{
-				Model: model,
-				Messages: []openai.ChatCompletionMessageParamUnion{
-					openai.DeveloperMessage(developer_prompt),
-					openai.UserMessage(input),
+			responses.ResponseNewParams{
+				Model:        model,
+				Instructions: openai.String(developer_prompt),
+				Input: responses.ResponseNewParamsInputUnion{
+					OfString: openai.String(input),
 				},
+				Reasoning: openai.ReasoningParam{
+					Effort: openai.ReasoningEffortMinimal,
+				},
+				// Text: responses.ResponseTextConfigParam{
+				// 	Format: responses.ResponseFormatTextConfigUnionParam{
+				// 		OfJSONSchema: open,
+				// 	},
+				// },
 			},
 		)
 
@@ -53,59 +62,59 @@ func ChatCompletion(context context.Context, model string, developer_prompt stri
 		bbq := false // bbq stands for "backslash before quotation"
 
 		for stream.Next() {
-			chunk := stream.Current()
+			data := stream.Current()
+			// if data.Delta. {
+			aiToken := data.Delta
+			fmt.Println(aiToken)
 
-			if len(chunk.Choices) > 0 {
-				aiToken := chunk.Choices[0].Delta.Content
-
-				if !isInTokensArray {
-					if strings.Contains(aiToken, "[") {
-						isInTokensArray = true
+			if !isInTokensArray {
+				if strings.Contains(aiToken, "[") {
+					isInTokensArray = true
+				}
+			} else {
+				for _, r := range aiToken {
+					if r == '"' && !bbq {
+						inQuotation = !inQuotation
 					}
-				} else {
-					for _, r := range aiToken {
-						if r == '"' && !bbq {
-							inQuotation = !inQuotation
+					if r == '\\' {
+						bbq = true
+					} else {
+						if bbq == true {
+							bbq = false
 						}
-						if r == '\\' {
-							bbq = true
-						} else {
-							if bbq == true {
-								bbq = false
-							}
-						}
-						if !inQuotation {
-							if r == '{' {
-								buildingToken = true
-							} else if r == '}' && buildingToken == true {
-								buildingToken = false
-								token += string(r)
-
-								tokenBytes := []byte(token)
-
-								var tokenS Token
-
-								err := json.Unmarshal(tokenBytes, &tokenS)
-								if err != nil {
-									tokenStreamChannel <- TokenStreamRes{
-										Response: nil,
-										Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
-									}
-								}
-
-								tokenStreamChannel <- TokenStreamRes{
-									Response: &tokenS,
-									Error:    nil,
-								}
-
-								token = ""
-							}
-						}
-						if buildingToken {
+					}
+					if !inQuotation {
+						if r == '{' {
+							buildingToken = true
+						} else if r == '}' && buildingToken == true {
+							buildingToken = false
 							token += string(r)
+
+							tokenBytes := []byte(token)
+
+							var tokenS Token
+
+							err := json.Unmarshal(tokenBytes, &tokenS)
+							if err != nil {
+								tokenStreamChannel <- TokenStreamRes{
+									Response: nil,
+									Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
+								}
+							}
+
+							tokenStreamChannel <- TokenStreamRes{
+								Response: &tokenS,
+								Error:    nil,
+							}
+
+							token = ""
 						}
+					}
+					if buildingToken {
+						token += string(r)
 					}
 				}
+				// }
 			}
 		}
 

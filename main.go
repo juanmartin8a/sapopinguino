@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
-	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/v2"
 )
 
 func init() {
@@ -45,7 +45,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		}, error
 	}
 
-	tokenStreamChannel := aiutils.ChatCompletion(ctx, openai.ChatModelGPT4_1, aiutils.DeveloperPrompt, bodyS.Message)
+	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, aiutils.DeveloperPrompt, bodyS.Message)
 
 	for res := range tokenStreamChannel {
 		if res.Error != nil {
