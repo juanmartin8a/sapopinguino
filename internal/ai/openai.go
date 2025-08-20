@@ -31,7 +31,7 @@ func ConfigOpenAI() {
 	OpenAIClient = &openaiClient
 }
 
-func ChatCompletion(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
+func StreamResponse(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
 
 	tokenStreamChannel := make(chan TokenStreamRes)
 
@@ -58,57 +58,58 @@ func ChatCompletion(context context.Context, model string, developer_prompt stri
 
 		for stream.Next() {
 			data := stream.Current()
-			if data.JSON.Text.Valid() {
-				aiToken := data.Text
+			// if data.Delta. {
+			aiToken := data.Delta
+			fmt.Println(aiToken)
 
-				if !isInTokensArray {
-					if strings.Contains(aiToken, "[") {
-						isInTokensArray = true
+			if !isInTokensArray {
+				if strings.Contains(aiToken, "[") {
+					isInTokensArray = true
+				}
+			} else {
+				for _, r := range aiToken {
+					if r == '"' && !bbq {
+						inQuotation = !inQuotation
 					}
-				} else {
-					for _, r := range aiToken {
-						if r == '"' && !bbq {
-							inQuotation = !inQuotation
+					if r == '\\' {
+						bbq = true
+					} else {
+						if bbq == true {
+							bbq = false
 						}
-						if r == '\\' {
-							bbq = true
-						} else {
-							if bbq == true {
-								bbq = false
-							}
-						}
-						if !inQuotation {
-							if r == '{' {
-								buildingToken = true
-							} else if r == '}' && buildingToken == true {
-								buildingToken = false
-								token += string(r)
-
-								tokenBytes := []byte(token)
-
-								var tokenS Token
-
-								err := json.Unmarshal(tokenBytes, &tokenS)
-								if err != nil {
-									tokenStreamChannel <- TokenStreamRes{
-										Response: nil,
-										Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
-									}
-								}
-
-								tokenStreamChannel <- TokenStreamRes{
-									Response: &tokenS,
-									Error:    nil,
-								}
-
-								token = ""
-							}
-						}
-						if buildingToken {
+					}
+					if !inQuotation {
+						if r == '{' {
+							buildingToken = true
+						} else if r == '}' && buildingToken == true {
+							buildingToken = false
 							token += string(r)
+
+							tokenBytes := []byte(token)
+
+							var tokenS Token
+
+							err := json.Unmarshal(tokenBytes, &tokenS)
+							if err != nil {
+								tokenStreamChannel <- TokenStreamRes{
+									Response: nil,
+									Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
+								}
+							}
+
+							tokenStreamChannel <- TokenStreamRes{
+								Response: &tokenS,
+								Error:    nil,
+							}
+
+							token = ""
 						}
+					}
+					if buildingToken {
+						token += string(r)
 					}
 				}
+				// }
 			}
 		}
 
