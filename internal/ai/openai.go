@@ -11,6 +11,7 @@ import (
 
 	openai "github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/packages/param"
 	"github.com/openai/openai-go/v2/responses"
 )
 
@@ -23,7 +24,9 @@ type TokenStreamRes struct {
 
 func ConfigOpenAI() {
 
-	LoadMarkdown()
+	LoadDeveloperPrompt()
+
+	LoadJsonSchema()
 
 	openaiClient := openai.NewClient(
 		option.WithAPIKey(config.C.OpenAI.Key),
@@ -47,11 +50,15 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 				Reasoning: openai.ReasoningParam{
 					Effort: openai.ReasoningEffortMinimal,
 				},
-				// Text: responses.ResponseTextConfigParam{
-				// 	Format: responses.ResponseFormatTextConfigUnionParam{
-				// 		OfJSONSchema: open,
-				// 	},
-				// },
+				Text: responses.ResponseTextConfigParam{
+					Format: responses.ResponseFormatTextConfigUnionParam{
+						OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
+							Name:   "sapopinguino_transliteration",
+							Strict: param.NewOpt(true),
+							Schema: JSON_Schema,
+						},
+					},
+				},
 			},
 		)
 

@@ -1,4 +1,4 @@
-package aiutils;
+package aiutils
 
 type Token struct {
 	Type          string `json:"type"`
