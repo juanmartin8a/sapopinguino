@@ -11,7 +11,6 @@ import (
 
 	openai "github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
-	"github.com/openai/openai-go/v2/packages/param"
 	"github.com/openai/openai-go/v2/responses"
 )
 
@@ -54,7 +53,7 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 					Format: responses.ResponseFormatTextConfigUnionParam{
 						OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
 							Name:   "sapopinguino_transliteration",
-							Strict: param.NewOpt(true),
+							Strict: openai.Bool(true),
 							Schema: JSON_Schema,
 						},
 					},
