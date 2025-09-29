@@ -3,8 +3,7 @@ package config
 // READS THE .yml FILES FROM ./config
 
 import (
-	"log"
-	"os"
+	"fmt"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -13,109 +12,63 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Config struct {
+	c config
+}
+
 type config struct {
-	AppEnv    string
 	Websocket struct {
-		Endpoint string
-	}
+		Endpoint string `mapstructure:"endpoint"`
+	} `mapstructure:"websocket"`
 	OpenAI struct {
-		Key string
-	}
+		Key string `mapstructure:"key"`
+	} `mapstructure:"openai"`
 }
 
-var C config
+func LoadConfig() (*Config, error) {
 
-const (
-	Development = "dev"
-	Production  = "prod"
-)
-
-type ReadConfigOption struct {
-	AppEnv string
-}
-
-func ReadConfig(option ReadConfigOption) {
-	e := appEnv(option)
-
-	if e == Production {
-		setProd()
-	} else {
-		setDev()
-	}
+	setEnvConfig()
 
 	viper.SetConfigType("yml")
 
-	LoadDotEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	viper.AutomaticEnv()
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalln(err)
+		return nil, fmt.Errorf("Error while running viper.ReadInConfig(): %v", err)
 	}
 
-	if err := viper.Unmarshal(&C); err != nil {
-		log.Fatalln(err)
+	var tempConfig config
+
+	if err := viper.Unmarshal(&tempConfig); err != nil {
+		return nil, fmt.Errorf("Error while running viper.Unmarshal(): %v", err)
 	}
 
-	// err := setCValues(&C.OpenAI.Key)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-}
-
-func appEnv(option ReadConfigOption) string {
-	if option.AppEnv != "" {
-		return option.AppEnv
-	}
-	if os.Getenv("APP_ENV") != "" {
-		return os.Getenv("APP_ENV")
+	c := &Config{
+		c: tempConfig,
 	}
 
-	return Development
+	return c, nil
 }
 
 func RootDir() string {
 	_, b, _, _ := runtime.Caller(0)
-	d := path.Join(path.Dir(b))
-	return filepath.Dir(d) // internal/
+	dir := path.Dir(b)
+	return filepath.Join(dir, "../..") // sapopinguino/
 }
 
-func setDev() {
+func setEnvConfig() {
 	viper.AddConfigPath(
 		filepath.Join(RootDir(), "config"),
-		// "/config",
 	)
-	viper.SetConfigName("config.dev")
+	viper.SetConfigName(config_filename)
 }
 
-func setProd() {
-	viper.AddConfigPath(
-		filepath.Join(RootDir(), "config"),
-		// "/config",
-	)
-	viper.SetConfigName("config.prod")
+func (c *Config) OpenAIKey() string {
+	return c.c.OpenAI.Key
 }
 
-// func setCValues(params ...*string) error {
-// 	for _, paramName := range params {
-// 		paramBytes, err := awsutils.GetSecretString(
-// 			*paramName,
-// 				)
-// 		if err != nil {
-// 			log.Printf(
-// 				"Error while getting param %s: %s",
-// 				*paramName,
-// 				err,
-// 			)
-// 			return err
-// 		}
-//
-// 		param := string(paramBytes)
-//
-// 		*paramName = param
-// 	}
-//
-// 	return nil
-// }
+func (c *Config) WebsocketEndpoint() *string { // pointer to string because that's what the SDK asks for
+	return &c.c.Websocket.Endpoint
+}

@@ -20,13 +20,25 @@ import (
 )
 
 func init() {
-	awsutils.ConfigAWS()
+	err := awsutils.ConfigAWS()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	config.ReadConfig(config.ReadConfigOption{})
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
+	err = awsutils.ConfigAWSGateway(c)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	aiutils.ConfigOpenAI()
+	err = aiutils.ConfigOpenAI(c)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
