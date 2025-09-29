@@ -22,11 +22,14 @@ import (
 func init() {
 	awsutils.ConfigAWS()
 
-	config.ReadConfig(config.ReadConfigOption{})
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	awsutils.ConfigAWSGateway(&config.C.Websocket.Endpoint)
 
-	aiutils.ConfigOpenAI()
+	aiutils.ConfigOpenAI(c)
 }
 
 func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {

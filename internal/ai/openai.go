@@ -21,14 +21,14 @@ type TokenStreamRes struct {
 	Error    error
 }
 
-func ConfigOpenAI() {
+func ConfigOpenAI(config *config.Config) {
 
 	LoadDeveloperPrompt()
 
 	LoadJsonSchema()
 
 	openaiClient := openai.NewClient(
-		option.WithAPIKey(config.C.OpenAI.Key),
+		option.WithAPIKey(config.OpenAIKey()),
 	)
 	OpenAIClient = &openaiClient
 }

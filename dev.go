@@ -13,9 +13,14 @@ import (
 )
 
 func main() {
-	config.ReadConfig(config.ReadConfigOption{})
+	config.LoadDotEnv()
 
-	aiutils.ConfigOpenAI()
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	aiutils.ConfigOpenAI(c)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

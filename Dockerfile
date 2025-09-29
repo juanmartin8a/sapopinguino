@@ -1,5 +1,7 @@
 FROM golang:1.25.0-alpine3.22 as build
 
+ENV APP_ENV=prod
+
 WORKDIR /sapopinguino
 
 COPY go.mod go.sum ./
@@ -8,17 +10,17 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main main.go
+RUN go build -tags prod -ldflags="-s -w" -o ./bin/main ./main.go 
 
 FROM alpine:3.22
 
-COPY --from=build /sapopinguino/main /main
+WORKDIR /sapopinguino
 
-COPY --from=build /sapopinguino/internal/config /config
+COPY --from=build /sapopinguino/bin/main ./main
 
-COPY --from=build /sapopinguino/assets /assets
+COPY --from=build /sapopinguino/assets ./assets
 
-WORKDIR /
+COPY --from=build /sapopinguino/config ./config
 
-ENTRYPOINT [ "/main" ]
+ENTRYPOINT [ "./main" ]
 

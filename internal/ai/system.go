@@ -13,8 +13,9 @@ var DeveloperPrompt string
 var JsonSchema map[string]any
 
 func LoadDeveloperPrompt() {
+
 	bytes, err := os.ReadFile(
-		filepath.Join(config.RootDir(), "../assets/developer_prompt.md"),
+		filepath.Join(config.RootDir(), "assets/developer_prompt.md"),
 	)
 	if err != nil {
 		log.Fatalf("Error while loading the developer prompt: %s", err)
@@ -24,8 +25,9 @@ func LoadDeveloperPrompt() {
 }
 
 func LoadJsonSchema() {
+
 	bytes, err := os.ReadFile(
-		filepath.Join(config.RootDir(), "../assets/json_schema.json"),
+		filepath.Join(config.RootDir(), "assets/json_schema.json"),
 	)
 	if err != nil {
 		log.Fatalf("Error while loading the json schema: %s", err)
