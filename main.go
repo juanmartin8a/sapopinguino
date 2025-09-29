@@ -1,3 +1,6 @@
+// main.go
+//go:build prod || dev
+
 package main
 
 import (
@@ -29,8 +32,6 @@ func init() {
 func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	connectionID := event.RequestContext.ConnectionID
 
-	// tokens := []*aiutils.Token{}
-
 	bodyBytes := []byte(event.Body)
 
 	var bodyS awsutils.Body
@@ -45,7 +46,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		}, error
 	}
 
-	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5Mini, aiutils.DeveloperPrompt, bodyS.Message)
+	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, aiutils.DeveloperPrompt, bodyS.Message)
 
 	for res := range tokenStreamChannel {
 		if res.Error != nil {
@@ -60,8 +61,6 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 			}
 			break
 		}
-
-		// tokens = append(tokens, res.Response)
 
 		var jsonData []byte
 		jsonData, err = json.Marshal(res.Response)

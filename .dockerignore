@@ -2,3 +2,5 @@
 .gitignore
 LICENSE
 atlas
+dev.go
+.env
