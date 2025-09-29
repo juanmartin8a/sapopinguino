@@ -112,10 +112,10 @@ This key holds an array of arrays, where each array represents a token.
 Input:
 
 ```json
-{
+
   "input_language": "English",
   "target_language": "Russian",
-  "input": "Hello. Ccould you recommend a reliable taxi service?"
+  "input": "Hello. Could you recommend a reliable taxi service?"
 }
 
 ```

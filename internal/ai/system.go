@@ -4,14 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
+	"sapopinguino/internal/config"
 )
 
 var DeveloperPrompt string
 
-var JSON_Schema map[string]any
+var JsonSchema map[string]any
 
 func LoadDeveloperPrompt() {
-	bytes, err := os.ReadFile("../../assets/developer_prompt.md")
+	bytes, err := os.ReadFile(
+		filepath.Join(config.RootDir(), "../assets/developer_prompt.md"),
+	)
 	if err != nil {
 		log.Fatalf("Error while loading the developer prompt: %s", err)
 	}
@@ -20,12 +24,14 @@ func LoadDeveloperPrompt() {
 }
 
 func LoadJsonSchema() {
-	bytes, err := os.ReadFile("../../assets/json_schema.json")
+	bytes, err := os.ReadFile(
+		filepath.Join(config.RootDir(), "../assets/json_schema.json"),
+	)
 	if err != nil {
 		log.Fatalf("Error while loading the json schema: %s", err)
 	}
 
-	if err := json.Unmarshal(bytes, &JSON_Schema); err != nil {
+	if err := json.Unmarshal(bytes, &JsonSchema); err != nil {
 		log.Fatalf("Error while unmarshaling the json schema: %s", err)
 	}
 }

@@ -1,1 +1,4 @@
 internal/config/config.dev.yml
+internal/config/config.prod.yml
+.env
+

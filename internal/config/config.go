@@ -44,6 +44,9 @@ func ReadConfig(option ReadConfigOption) {
 	}
 
 	viper.SetConfigType("yml")
+
+	LoadDotEnv()
+
 	viper.AutomaticEnv()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -73,24 +76,24 @@ func appEnv(option ReadConfigOption) string {
 	return Development
 }
 
-func rootDir() string {
+func RootDir() string {
 	_, b, _, _ := runtime.Caller(0)
 	d := path.Join(path.Dir(b))
-	return filepath.Dir(d)
+	return filepath.Dir(d) // internal/
 }
 
 func setDev() {
 	viper.AddConfigPath(
-		// filepath.Join(rootDir(), "config"),
-		"/config",
+		filepath.Join(RootDir(), "config"),
+		// "/config",
 	)
 	viper.SetConfigName("config.dev")
 }
 
 func setProd() {
 	viper.AddConfigPath(
-		// filepath.Join(rootDir(), "config"),
-		"/config",
+		filepath.Join(RootDir(), "config"),
+		// "/config",
 	)
 	viper.SetConfigName("config.prod")
 }
@@ -99,7 +102,7 @@ func setProd() {
 // 	for _, paramName := range params {
 // 		paramBytes, err := awsutils.GetSecretString(
 // 			*paramName,
-// 		)
+// 				)
 // 		if err != nil {
 // 			log.Printf(
 // 				"Error while getting param %s: %s",

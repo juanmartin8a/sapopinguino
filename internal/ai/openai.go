@@ -54,7 +54,7 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 						OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
 							Name:   "sapopinguino_transliteration",
 							Strict: openai.Bool(true),
-							Schema: JSON_Schema,
+							Schema: JsonSchema,
 						},
 					},
 				},
@@ -65,13 +65,11 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 		inQuotation := false
 		buildingToken := false
 		token := ""
-		bbq := false // bbq stands for "backslash before quotation"
 
 		for stream.Next() {
 			data := stream.Current()
 			// if data.Delta. {
 			aiToken := data.Delta
-			fmt.Println(aiToken)
 
 			if !isInTokensArray {
 				if strings.Contains(aiToken, "[") {
@@ -79,28 +77,18 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 				}
 			} else {
 				for _, r := range aiToken {
-					if r == '"' && !bbq {
-						inQuotation = !inQuotation
-					}
-					if r == '\\' {
-						bbq = true
-					} else {
-						if bbq == true {
-							bbq = false
-						}
-					}
 					if !inQuotation {
-						if r == '{' {
+						if r == '[' {
 							buildingToken = true
-						} else if r == '}' && buildingToken == true {
+						} else if r == ']' && buildingToken == true {
 							buildingToken = false
 							token += string(r)
 
 							tokenBytes := []byte(token)
 
-							var tokenS Token
+							var tokenSlice []string
 
-							err := json.Unmarshal(tokenBytes, &tokenS)
+							err := json.Unmarshal(tokenBytes, &tokenSlice)
 							if err != nil {
 								tokenStreamChannel <- TokenStreamRes{
 									Response: nil,
@@ -108,8 +96,24 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 								}
 							}
 
+							var tokenStruct Token
+
+							if tokenSlice[0] == "word" {
+								tokenStruct = Token{
+									Type:          tokenSlice[0],
+									Input:         tokenSlice[1],
+									Transcription: tokenSlice[2],
+									Output:        tokenSlice[3],
+								}
+							} else {
+								tokenStruct = Token{
+									Type:  tokenSlice[0],
+									Value: tokenSlice[1],
+								}
+							}
+
 							tokenStreamChannel <- TokenStreamRes{
-								Response: &tokenS,
+								Response: &tokenStruct,
 								Error:    nil,
 							}
 
