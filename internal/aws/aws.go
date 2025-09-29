@@ -3,6 +3,7 @@ package awsutils
 import (
 	"context"
 	"fmt"
+	"sapopinguino/internal/config"
 
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
@@ -28,7 +29,7 @@ func ConfigAWS() error {
 	return nil
 }
 
-func ConfigAWSGateway(websocketsEndpoint *string) error {
+func ConfigAWSGateway(c *config.Config) error {
 	cfg, err := awsConfig.LoadDefaultConfig(
 		context.TODO(),
 	)
@@ -37,7 +38,7 @@ func ConfigAWSGateway(websocketsEndpoint *string) error {
 	}
 
 	APIGatewayClient = apigatewaymanagementapi.NewFromConfig(cfg, func(o *apigatewaymanagementapi.Options) {
-		o.BaseEndpoint = websocketsEndpoint
+		o.BaseEndpoint = c.WebsocketEndpoint()
 	})
 
 	return nil

@@ -69,6 +69,6 @@ func (c *Config) OpenAIKey() string {
 	return c.c.OpenAI.Key
 }
 
-func (c *Config) WebsocketEndpoint() string {
-	return c.c.Websocket.Endpoint
+func (c *Config) WebsocketEndpoint() *string { // pointer to string because that's what the SDK asks for
+	return &c.c.Websocket.Endpoint
 }

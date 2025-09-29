@@ -21,16 +21,24 @@ type TokenStreamRes struct {
 	Error    error
 }
 
-func ConfigOpenAI(config *config.Config) {
+func ConfigOpenAI(c *config.Config) error {
 
-	LoadDeveloperPrompt()
+	err := LoadDeveloperPrompt()
+	if err != nil {
+		return err
+	}
 
-	LoadJsonSchema()
+	err = LoadJsonSchema()
+	if err != nil {
+		return err
+	}
 
 	openaiClient := openai.NewClient(
-		option.WithAPIKey(config.OpenAIKey()),
+		option.WithAPIKey(c.OpenAIKey()),
 	)
 	OpenAIClient = &openaiClient
+
+	return nil
 }
 
 func StreamResponse(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
