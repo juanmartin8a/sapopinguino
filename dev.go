@@ -27,7 +27,7 @@ func main() {
 
 	input := `{"input_language":"English","target_language":"Spanish","input":"Hi! How are you doing!? I heeard that you won the comp. That's amazing!!"}`
 
-	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, aiutils.DeveloperPrompt, input)
+	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, input)
 
 	for res := range tokenStreamChannel {
 		if res.Error != nil {

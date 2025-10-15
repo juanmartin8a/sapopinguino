@@ -23,16 +23,6 @@ type TokenStreamRes struct {
 
 func ConfigOpenAI(c *config.Config) error {
 
-	err := LoadDeveloperPrompt()
-	if err != nil {
-		return err
-	}
-
-	err = LoadJsonSchema()
-	if err != nil {
-		return err
-	}
-
 	openaiClient := openai.NewClient(
 		option.WithAPIKey(c.OpenAIKey()),
 	)
@@ -41,7 +31,7 @@ func ConfigOpenAI(c *config.Config) error {
 	return nil
 }
 
-func StreamResponse(context context.Context, model string, developer_prompt string, input string) <-chan TokenStreamRes {
+func StreamResponse(context context.Context, model string, input string) <-chan TokenStreamRes {
 
 	tokenStreamChannel := make(chan TokenStreamRes)
 
@@ -49,22 +39,16 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 		stream := OpenAIClient.Responses.NewStreaming(
 			context,
 			responses.ResponseNewParams{
-				Model:        model,
-				Instructions: openai.String(developer_prompt),
+				Model: model,
+				Prompt: responses.ResponsePromptParam{
+					ID:      "pmpt_68d6da1718408193a999196359dda39d0690935b3ba75fe4",
+					Version: openai.String("3"),
+				},
 				Input: responses.ResponseNewParamsInputUnion{
 					OfString: openai.String(input),
 				},
 				Reasoning: openai.ReasoningParam{
 					Effort: openai.ReasoningEffortMinimal,
-				},
-				Text: responses.ResponseTextConfigParam{
-					Format: responses.ResponseFormatTextConfigUnionParam{
-						OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
-							Name:   "sapopinguino_transliteration",
-							Strict: openai.Bool(true),
-							Schema: JsonSchema,
-						},
-					},
 				},
 			},
 		)
