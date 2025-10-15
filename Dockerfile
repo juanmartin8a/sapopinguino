@@ -16,8 +16,6 @@ WORKDIR /sapopinguino
 
 COPY --from=build /sapopinguino/bin/main ./main
 
-COPY --from=build /sapopinguino/assets ./assets
-
 COPY --from=build /sapopinguino/config/config.prod.yml ./config/config.prod.yml
 
 ENTRYPOINT [ "./main" ]

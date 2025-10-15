@@ -58,7 +58,7 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 		}, error
 	}
 
-	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, aiutils.DeveloperPrompt, bodyS.Message)
+	tokenStreamChannel := aiutils.StreamResponse(ctx, openai.ChatModelGPT5, bodyS.Message)
 
 	for res := range tokenStreamChannel {
 		if res.Error != nil {
