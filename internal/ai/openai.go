@@ -76,64 +76,66 @@ func StreamResponse(context context.Context, model string, developer_prompt stri
 
 		for stream.Next() {
 			data := stream.Current()
-			// if data.Delta. {
+
 			aiToken := data.Delta
 
-			if !isInTokensArray {
-				if strings.Contains(aiToken, "[") {
-					isInTokensArray = true
-				}
-			} else {
-				for _, r := range aiToken {
-					if !inQuotation {
-						if r == '[' {
-							buildingToken = true
-						} else if r == ']' && buildingToken == true {
-							buildingToken = false
-							token += string(r)
+			if len(aiToken) > 0 {
+				if !isInTokensArray {
+					if strings.Contains(aiToken, "[") {
+						isInTokensArray = true
+					}
+				} else {
+					for _, r := range aiToken {
+						if !inQuotation {
+							if r == '[' {
+								buildingToken = true
+							} else if r == ']' && buildingToken == true {
+								buildingToken = false
+								token += string(r)
 
-							tokenBytes := []byte(token)
+								tokenBytes := []byte(token)
 
-							var tokenSlice []string
+								var tokenSlice []string
 
-							err := json.Unmarshal(tokenBytes, &tokenSlice)
-							if err != nil {
+								err := json.Unmarshal(tokenBytes, &tokenSlice)
+								if err != nil {
+									tokenStreamChannel <- TokenStreamRes{
+										Response: nil,
+										Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
+									}
+								}
+
+								var tokenStruct Token
+
+								if tokenSlice[0] == "word" {
+									tokenStruct = Token{
+										Type:          tokenSlice[0],
+										Input:         tokenSlice[1],
+										Transcription: tokenSlice[2],
+										Output:        tokenSlice[3],
+									}
+								} else {
+									tokenStruct = Token{
+										Type:  tokenSlice[0],
+										Value: tokenSlice[1],
+									}
+								}
+
 								tokenStreamChannel <- TokenStreamRes{
-									Response: nil,
-									Error:    fmt.Errorf("Error while unmarshalling token: %v", err),
+									Response: &tokenStruct,
+									Error:    nil,
 								}
+
+								token = ""
 							}
-
-							var tokenStruct Token
-
-							if tokenSlice[0] == "word" {
-								tokenStruct = Token{
-									Type:          tokenSlice[0],
-									Input:         tokenSlice[1],
-									Transcription: tokenSlice[2],
-									Output:        tokenSlice[3],
-								}
-							} else {
-								tokenStruct = Token{
-									Type:  tokenSlice[0],
-									Value: tokenSlice[1],
-								}
-							}
-
-							tokenStreamChannel <- TokenStreamRes{
-								Response: &tokenStruct,
-								Error:    nil,
-							}
-
-							token = ""
+						}
+						if buildingToken {
+							token += string(r)
 						}
 					}
-					if buildingToken {
-						token += string(r)
-					}
 				}
-				// }
 			}
+
 		}
 
 		if err := stream.Err(); err != nil {
